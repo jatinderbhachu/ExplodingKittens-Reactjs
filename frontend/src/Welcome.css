@@ -1,0 +1,45 @@
+.Welcome-Container {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  background-color: var(--maximum-red);
+  margin: 0 30% 0 30%;
+  background-color: #181818;
+  border-radius: 1vw;
+}
+
+.Welcome-Container .BrowseButtons, .Welcome-Container .WelcomeInfo {
+  background-color: #2f2f2f;
+  width: 80%;
+  margin: 1vh auto 1vh auto;
+  color: antiquewhite;
+  padding: 0 1vh 1vh 1vh;
+  border-radius: 1vh;
+}
+
+.Welcome-Container button {
+  width: 100%;
+  font-size: 0.8rem;
+  /*! padding: 1%; */
+  background-color: #28df91;
+  border: 0px;
+  border-radius: 1vmin;
+}
+
+.Welcome-Container button:hover {
+  background-color: #15a26c;
+}
+
+.WelcomeInfo p {
+  font-size: 0.5rem;
+}
+
+@media only screen and (max-width: 800px) { 
+  .Welcome-Container .BrowseButtons, .Welcome-Container .WelcomeInfo {
+    width: 80%;
+    padding: 0 1vh 1vh 1vh;
+  }
+  .Welcome-Container {
+    margin: 0 10% 0 10%;
+  }
+}

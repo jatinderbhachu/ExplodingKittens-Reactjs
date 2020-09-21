@@ -1,0 +1,89 @@
+.LobbyBrowser {
+  background-color: #181818;
+  color: antiquewhite;
+  padding: 1vw;
+  margin: 0 1vw;
+  border-radius: 10px;
+}
+
+.LobbyBrowser table {
+  width: 100%;
+  height: 85%;
+  display: inline-block;
+  border-spacing: 0px 5px;
+  border-collapse: collapse;
+}
+
+.LobbyBrowser tbody {
+  display: block;
+  height: 100%;
+}
+
+.LobbyBrowser thead > tr {
+  margin: 0px;
+  text-align: center;
+}
+
+.LobbyBrowser tr {
+  display: table;
+  table-layout: fixed;
+  border-radius: 10px;
+  padding: 2px 0px 2px;
+  width: 100%;
+}
+
+.LobbyBrowser thead {
+  width: calc(100% - 1em);
+}
+
+.LobbyBrowser td {
+  padding: 5px 0px 5px 0px;
+  outline: 1px solid gray;
+}
+
+.LobbyBrowser tr > td:first-child {
+  border-left: 1px solid transparent;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.LobbyBrowser tr > td:last-child {
+  border-right: 1px solid transparent;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.LobbyBrowser table button {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px;
+  width: 70%;
+}
+
+.LobbyBrowser span {
+  font-size: 36px;
+}
+
+
+.LobbyBrowser button {
+  background-color: #f45555;
+  border: 0px;
+  padding: 1vw;
+  color: antiquewhite;
+  font-size: 0.6rem;
+  float: left;
+}
+.LobbyBrowser button:hover {
+  background-color: #e31a1a;
+  cursor: pointer;
+}
+
+.LobbyBrowser span > button {
+  font-size: 24px;
+  float: right;
+  margin: auto;
+  font-size: 24px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}

@@ -1,0 +1,31 @@
+.NameForm-Container{
+  z-index: 1; /* Sit on top */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: var(--maximum-red);
+}
+
+.NameForm {
+  text-align: center;
+  margin: 0 30% 0 30%;
+  background-color: #181818;
+  color: antiquewhite;
+  padding: 2vh 4vh 2vh 4vh;
+  border-radius: 1vw;
+}
+
+.NameForm input[type=text] {
+  width: 60%;
+  padding: 6px;
+  font-size: 0.6rem;
+  margin-bottom: 0.5vh;
+}
+
+.NameForm input[type=submit] {
+  width: 80%;
+  font-size: 0.8rem;
+  /*! padding: 1%; */
+  background-color: #28df91;
+  border: 0px;
+  border-radius: 1vmin;
+}

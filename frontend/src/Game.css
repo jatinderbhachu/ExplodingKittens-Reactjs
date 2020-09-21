@@ -1,0 +1,335 @@
+.nope { background-image: url("/NOPE.png"); }
+.shuffle { background-image: url("/SHUFFLE.png"); }
+.exploding { background-image: url("/EXPLODING.png"); }
+.future { background-image: url("/FUTURE.png"); }
+.favor { background-image: url("/FAVOR.png"); }
+.defuse { background-image: url("/DEFUSE.png"); }
+.skip { background-image: url("/SKIP.png"); }
+.attack { background-image: url("/ATTACK.png"); }
+.cat1 { background-image: url("/CAT.png"); }
+.cat2 { background-image: url("/CAT.png"); }
+.cat3 { background-image: url("/CAT.png"); }
+.cat4 { background-image: url("/CAT.png"); }
+.cat5 { background-image: url("/CAT.png"); }
+
+.nonameCard { background-image: url("/BLANK.png"); }
+
+
+.GameWrapper {
+  /*width: 100%;*/
+  /* bottom padding of this element controls the aspect ratio of the game table */ 
+  /*padding-bottom: 56.25%;*/
+  /*padding-bottom: 50.80%;*/
+  /*position: relative;*/
+  background: #ec7551;
+  margin: 0;
+  padding: 0;
+}
+
+.Game {
+  color: white;
+  font-size: 1.5vw;
+  text-align: center;
+
+  /*
+   * https://stackoverflow.com/questions/20590239/maintain-aspect-ratio-of-div-but-fill-screen-width-and-height-in-css
+   * */
+  width: 100vw; 
+  height: 51vw; /* 100/56.25 = 1.778 */
+  /*height: 56.25vw;*/
+  max-height: 100vh;
+  max-width: 196vh; /* 16/9 = 1.778 */
+  /*max-width: 177.8vh; */
+  margin: auto;
+  position: absolute;
+  top:0;bottom:0; /* vertical center */
+  left:0;right:0; /* horizontal center */
+
+}
+
+.PlayerArea {
+  /*height: 33.33vh;*/
+  height: 33.33%;
+}
+
+.OpponentArea {
+  display: flex;
+  flex-direction: row;
+  /*height: 33.33vh;*/
+  height: 33.33%;
+}
+
+.Opponent {
+  width: 100%;
+  background-color: white;
+  overflow: auto;
+}
+
+.OpponentName {
+  position: absolute;
+  margin: auto;
+  text-align: center;
+  width: fit-content;
+  padding-left: 1%;
+  padding-right: 1%;
+}
+
+.askingFavor, .stealing {
+  border: 2px dashed limegreen;
+}
+
+.askingFavor:hover, .stealing:hover {
+  border: 5px dashed lime;
+}
+
+.TableArea {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto auto;
+  /*height: 33.33vh;*/
+  height: 33.33%;
+}
+
+.TableArea div:last-child{
+  grid-column: 4;
+}
+
+:root {
+  --real-card-width: 3;
+  --real-card-height: 5.04;
+  --real-card-ratio-wh: calc(var(--real-card-height) / var(--real-card-width));
+  --card-width: calc((100vw) / 9);
+  --card-height: calc(var(--card-width) * var(--real-card-ratio-wh));
+
+  --card-scale: 2.6%;
+  --futureCard-scale: 5.6%;
+
+}
+
+.CardStack button {
+  position: relative;
+}
+
+.Card {
+  font-size: 2vw;
+  position: absolute;
+  padding: 2px;
+  width: calc(var(--real-card-width) * var(--card-scale));
+  height: calc(var(--real-card-height) * var(--card-scale) * var(--real-card-ratio-wh));
+  top: 0;  bottom: 0;  left: 0;  right: 0;
+
+  background-size: cover;
+
+  transition: left 1s ease-in, transform 0.1s ease-in;
+}
+
+
+.AnimatedCard {
+  z-index: 1;
+  font-size: 2vw;
+  position: absolute;
+  padding: 2px;
+  width: calc(var(--real-card-width) * var(--card-scale));
+  height: calc(var(--real-card-height) * var(--card-scale) * var(--real-card-ratio-wh));
+  top: 0;  bottom: 0;  left: 0;  right: 0;
+
+  background-size: cover;
+  transition: left 0.1s ease-out;
+  transition: transform 0.1s ease-out;
+
+}
+
+
+.Hoverable:hover {
+  /*z-index: 1;*/
+  transform: translateY(-10%);
+}
+
+
+/* FIXME: REPLACE WITH DIFFERENT ANIMATED BORDER */ 
+.selected {
+  border: 2px solid transparent;
+  border-image: url("/animatedBorder.gif");
+  border-image-slice: 1 1 1 1;
+
+  background-blend-mode: overlay;
+  background-color: #495bbfed;
+}
+
+.FutureCards {
+  z-index: 1;
+  background-color: white;
+  box-shadow: #908484 0px 20px 17px 4px;
+  position: absolute;
+  display: block;
+  left: 25%;
+  top: 25%;
+  width: 50%;
+  height: 50%;
+}
+
+.CardToolTip {
+  display: none;
+  position: relative;
+  z-index: 10;
+  left: -22%;
+  top: -55%;
+  width: 140%;
+  height: 50%;
+  background-color: #313131;
+  border-radius: 1vh;
+  font-size: 1vw;
+  padding: 2%;
+  animation: ToolTipAnim 0.5s ease-out;
+}
+
+@keyframes ToolTipAnim {
+  0% {
+    opacity: 0;
+  }
+  
+  100% {
+    opacity: 1;
+  }
+}
+
+.Card:hover .CardToolTip {
+  display: block;
+}
+
+.MoveHistory {
+  position: absolute;
+  font-size: 1vw;
+  z-index: 0;
+}
+
+.MoveHistory * {
+  z-index: 0;
+}
+
+.MoveHistory > h3 {
+  margin-top: 0px;
+}
+
+.MoveHistory-list {
+  height: 100%;
+  border: 1px solid black;
+  background-color: slategray;
+  overflow-y: hidden;
+}
+
+.MoveHistory-list:hover {
+  overflow-y: auto;
+}
+
+.MoveHistory-item {
+  border-bottom: 1px solid black;
+  text-align: left;
+}
+
+.MoveHistory-item > div:first-child {
+  display: inline-block;
+  font-size: 0.6em;
+  width: 6%;
+  border-right: 1px solid black;
+}
+
+.MoveHistory-item > div:last-child{
+  display: inline-block;
+  padding-left: 1%;
+}
+
+
+.FutureCardsNotification, .WinnerNotification {
+  z-index: 2;
+  background-color: #008ee373;
+  border-bottom-left-radius: 1vw;
+  border-bottom-right-radius: 1vw;
+  position: absolute;
+  margin: auto;
+  width: 50%;
+  height: 50%;
+  top: -75%;
+  left: 25%;
+
+  animation: FutureCardsNotificationPopup 5s ease-out;
+}
+
+.WinnerNotification {
+
+  left: 0%;
+  top: 0%;
+  width: 100%;
+  height: 100%;
+
+  animation: WinnerNotificationPopup 1s ease-out;
+}
+
+
+@keyframes WinnerNotificationPopup {
+  0% {
+    opacity: 0;
+    top: -100%;
+  }
+
+  100% {
+    opacity: 1;
+    top: 0%;
+  }
+}
+
+.FutureCardsNotification > .Card {
+  width: calc(var(--real-card-width) * var(--card-scale) * 2.5);
+  height: calc(var(--real-card-height) * var(--card-scale) * var(--real-card-ratio-wh) * 2.5);
+}
+.FutureCardsNotification > div:last-child {
+  bottom: 5%;
+  position: absolute;
+  width: 100%;
+}
+
+@keyframes FutureCardsNotificationPopup {
+  0% {
+    opacity: 0;
+    top: -75%;
+  }
+
+  10% {
+    opacity: 1;
+    top: 15%;
+  }
+
+  95% {
+    opacity: 1;
+    top: 15%;
+  }
+
+  100% {
+    opacity: 0;
+    top: -75%;
+  }
+}
+
+@keyframes NotificationPopup {
+  0% {
+    top: -14%;
+  }
+
+  10% {
+    top: 0%;
+  }
+
+  90% {
+    top: 0%;
+  }
+
+  100% {
+    top: -14%;
+  }
+}
+
+.BombOverlay {
+  background-image: url("/C4.png");
+  background-repeat: no-repeat;
+  position: absolute;
+  background-size: contain;
+}

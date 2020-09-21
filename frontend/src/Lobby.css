@@ -1,0 +1,175 @@
+:root {
+  /* CSS HEX */
+  --prussian-blue: #003049ff;
+  --maximum-red: #d62828ff;
+  --orange: #f77f00ff;
+  --maximum-yellow-red: #fcbf49ff;
+  --lemon-meringue: #eae2b7ff;
+}
+
+.CreateLobby-Container {
+  background-color: var(--maximum-red);
+  height: 100vh;
+  padding: 3vw;
+  font-size: 1vw;
+}
+
+.CreateLobby-Container > h1 {
+  text-align: center;
+  color: antiquewhite;
+  font-size: 1.5rem;
+}
+
+.CreateLobby {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 10px;
+}
+
+.CreateLobby > form, .CreateLobby-Player-Container {
+  padding: 3vw;
+  padding: 0.5vw;
+  width: 40%;
+  border-radius: 8px;
+  background-color: #181818;
+  text-align: center;
+  color: antiquewhite;
+}
+
+
+.CreateLobby h3 {
+  text-align: center;
+  font-size: 1rem;
+}
+
+.CreateLobby-Player {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: 1vw;
+}
+
+.LobbyPlayer {
+  padding: 5px 0px;
+  margin-bottom: 1vw;
+  width: 50%;
+  flex: 0 0 40%; 
+  background-color: var(--maximum-yellow-red);
+  color: black;
+}
+
+.LobbyPlayer > .PlayerName {
+  display: inline-block;
+  margin: auto;
+  text-align: center;
+  font-size: 0.7rem;
+
+}
+
+.LobbyPlayer  button {
+  margin-right: 5%;
+  padding: 2% 5% 2% 5%;
+  background-color: #f45555;
+  border: 0px;
+  color: antiquewhite;
+  font-size: 0.6rem;
+  float: right;
+}
+
+.LobbyPlayer  button:hover{
+  background-color: #e31a1a;
+  cursor: pointer;
+
+}
+
+/* Floating column for labels: 25% width */
+.CreateLobby .col-25 {
+  float: left;
+  width: 25%;
+  margin-top: 6px;
+}
+
+/* Floating column for inputs: 75% width */
+.col-75 {
+  float: left;
+  width: 75%;
+  margin-top: 6px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.CreateLobby label {
+  font-size: 0.8rem;
+}
+
+.CreateLobby input[type=text]{
+  width: 80%;
+}
+
+.CreateLobby input[type=submit]{
+  background-color: #f45555;
+  border: 0px;
+  padding: 1vw;
+  color: antiquewhite;
+  font-size: 0.6rem;
+  margin-top: 1vw;
+}
+
+.CreateLobby input[type=submit]:hover {
+  background-color: #e31a1a;
+  cursor: pointer;
+}
+
+.CreateLobby-Container h1 button {
+  background-color: #181818;
+  border: 0px;
+  padding: 1vw;
+  color: antiquewhite;
+  font-size: 0.6rem;
+  float: left;
+}
+.CreateLobby-Container h1 button:hover {
+  background-color: #181818;
+  cursor: pointer;
+}
+
+.CreateLobby-Container input:disabled, .CreateLobby-Container input:disabled:hover {
+  background-color: #585858;
+}
+
+.CreateLobby-Container .Invite {
+  background-color: var(--prussian-blue);
+  font-size: 1rem;
+  padding: 1vw;
+  color: antiquewhite;
+}
+
+.Invite div {
+  background-color: var(--maximum-yellow-red);
+  color: black;
+  padding: 0.4vw;
+  font-size: 0.8rem;
+}
+
+.Invite div:hover {
+  background-color: #fba500;
+  cursor: pointer;
+}
+
+
+@media only screen and (max-width: 800px) {
+  .CreateLobby {
+    flex-wrap: wrap;
+  }
+
+  .CreateLobby > * {
+    flex: 1 0 100%;
+    margin-bottom: 2vh;
+  }
+}
+

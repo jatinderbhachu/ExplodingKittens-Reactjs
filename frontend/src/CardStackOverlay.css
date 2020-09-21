@@ -1,0 +1,54 @@
+.CardStackOverlay {  
+  position: absolute; 
+  border: 1px solid transparent;
+  border-image: url("/animatedBorder.gif");
+  border-image-slice: 1 1 1 1;
+  animation: cardInitialBorderAnim 1s 1;
+}
+
+
+.CardStackOverlay-DeadPlayer {  
+  position: absolute; 
+  background: linear-gradient(45deg, rgba(217,141,141,0.7) 18%, rgba(154,86,86,0.7) 33%, rgba(51,16,16,0.7) 74%); 
+  z-index: 1;
+}
+
+.CardStackOverlay-DeadPlayer::after {
+  content: "DEAD";
+}
+
+@keyframes cardInitialBorderAnim {
+  0% {
+    border-width: 0px;
+  }
+  20% {
+    border-width: 10px;
+  }
+  100% {
+    border-width: 1px;
+  }
+}
+
+.CardStackOverlay-askingFavor {
+  position: absolute;
+  border: 1px solid transparent;
+  border-image: url("/animatedBorder.gif");
+  border-image-slice: 1 1 1 1;
+}
+
+.CardStackOverlay-askingFavor:hover { background-color: rgba(100, 100, 100, 0.3); }
+
+.CardStackOverlay:hover {
+  /*border: 1px solid transparent;*/
+  /*outline: 1px solid red;*/
+  background-color: rgba(100, 100, 100, 0.3);
+}
+
+.CardStackOverlay-unselectable {
+  position: absolute;
+  border: 1px solid transparent;
+  border-image: url("/animatedBorder.gif");
+  border-image-slice: 1 1 1 1;
+  /*outline: 1px solid red;*/
+  background-color: rgba(100, 100, 100, 0.3);
+}

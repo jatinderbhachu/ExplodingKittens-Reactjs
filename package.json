@@ -1,0 +1,29 @@
+{
+  "name": "explodingkittens",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-ws": "^4.0.0",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "uuid": "^8.2.0",
+    "ws": "^7.3.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "node": true
+    }
+  },
+  "devDependencies": {
+    "eslint": "^7.4.0"
+  }
+}
