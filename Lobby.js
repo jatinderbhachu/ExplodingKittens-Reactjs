@@ -34,7 +34,6 @@ class Lobby {
 
     // the id of the player whose turn it is
     // the index of turnOrder
-    this.currentTurnIndex = undefined;
     this.deadPlayers = 0;
 
     this.cardTypes = {
@@ -63,6 +62,7 @@ class Lobby {
       discardPile: [],
       currentTurn: undefined,
       winner: undefined,
+      currentTurnIndex: undefined,
     };
     this.prevGameState = {};
     this.updatePrevGameState();
@@ -154,8 +154,22 @@ class Lobby {
 
     if(this.gameState.players.get(this.gameState.currentTurn).drewExploding){
       if(cards[0] === "defuse"){
-        this.gameState.players.get(socket.id).isDead = false;
-        this.gameState.players.get(socket.id).insertingExploding = true;
+        let currentPlayer = this.gameState.players.get(socket.id);
+        currentPlayer.isDead = false;
+        // if the draw pile is empty, insert it at the top automatically
+        if(this.gameState.drawPile.length === 0){
+          this.removePlayerCards(socket.id, ["exploding"]);
+          this.gameState.drawPile.push("exploding");
+          this.exploding = false;
+          currentPlayer.drewExploding = false;
+          currentPlayer.insertingExploding = false;
+          this.addMoveHistoryItem(currentPlayer.name + " managed to defuse the exploding kitten in time");
+          this.nextTurn();
+          this.updateTurn();
+
+        } else {
+          currentPlayer.insertingExploding = true;
+        }
         //socket.send(formatMsg("select_exploding_pos", {}));
       } else if(cards[0] === "nope") {
         let lastCard = this.gameState.discardPile[this.gameState.discardPile.length-1];
@@ -204,7 +218,6 @@ class Lobby {
         // do not restore the game state if the previous card played was a defuse
         this.restorePrevGameState();
 
-        let currentPlayer = this.gameState.players.get(this.gameState.currentTurn);
         this.addMoveHistoryItem(this.gameState.players.get(socket.id).name + " noped " + lastCard);
 
       } else if (cards[0] === "shuffle") { // SHUFFLE
@@ -274,22 +287,12 @@ class Lobby {
       this.gameState.discardPile.push(card);
     }
 
-    //this.prevGameState = this.gameState;
-    //console.log("played cards, prevGameState", this.prevGameState);
     this.updateGameState();
   }
 
-  /*
-   * player uses favor card, gets a card from victim
-   * victim uses nope card
-   * victim gets his card restored
-   * player gets his card restored
-   * victims nope card is used up
-  */
-  
+
   restorePrevGameState(){
     const prevStateCopy = this.getPrevGameState();
-    const currentPlayer = { ...this.gameState.players.get(this.gameState.currentTurn) };
 
     let restorePrevCards = true;
     let lastCard;
@@ -315,16 +318,18 @@ class Lobby {
       }
     }
 
-    if(lastCard === "future")
+    if(lastCard === "future"){
       restorePrevCards = false;
+    } else if(lastCard === "attack"){
+      restorePrevCards = false;
+    }
 
-    //this.gameState.players = new Map();
     for(let player of this.prevGameState.players.values()){
       // create a new copy of the player and player cards
       const {cards, ...newPlayer} = {...player};
 
       if(restorePrevCards){
-        newPlayer.cards = [...player.cards];
+        newPlayer.cards = [...cards];
       } else {
         newPlayer.cards = [...this.gameState.players.get(player.socket.id).cards];
       }
@@ -338,6 +343,7 @@ class Lobby {
     this.gameState.discardPile = this.prevGameState.discardPile;
     if(lastCard === "skip" || lastCard === "attack"){
       this.gameState.currentTurn = this.prevGameState.currentTurn;
+      this.gameState.currentTurnIndex = this.prevGameState.currentTurnIndex;
     }
 
     //console.log(this.prevGameState, prevStateCopy);
@@ -357,6 +363,7 @@ class Lobby {
     this.prevGameState.drawPile = this.gameState.drawPile;
     this.prevGameState.discardPile = this.gameState.discardPile;
     this.prevGameState.currentTurn = this.gameState.currentTurn;
+    this.prevGameState.currentTurnIndex = this.gameState.currentTurnIndex;
   }
 
   /**
@@ -373,6 +380,7 @@ class Lobby {
     state.drawPile = this.prevGameState.drawPile;
     state.discardPile = this.prevGameState.discardPile;
     state.currentTurn = this.prevGameState.currentTurn;
+    state.currentTurnIndex = this.prevGameState.currentTurnIndex;
     return state;
   }
 
@@ -405,11 +413,11 @@ class Lobby {
 
     // insert numPlayers-1 exploding kittens into the draw pile
     for (let i = 0; i < this.gameState.players.size - 1; i++) {
-    //for (let i = 0; i < 4; i++) {
       let insertIndex = Math.floor(Math.random() * this.gameState.drawPile.length);
       console.log("inseting exploding at " + insertIndex);
       this.gameState.drawPile.splice(insertIndex, 0, "exploding");
     }
+
 
     // tell every client to start the game
     // determine the player who will play first turn
@@ -420,8 +428,8 @@ class Lobby {
     console.log("turn order: ",  this.turnOrder);
 
     let randPlayer = Math.floor(Math.random() * this.gameState.players.size);
-    this.currentTurnIndex = randPlayer;
-    this.gameState.currentTurn = this.turnOrder[this.currentTurnIndex];
+    this.gameState.currentTurnIndex = randPlayer;
+    this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
 
     this.gameState.players.get(this.gameState.currentTurn).myTurn = true;
     //this.updateTurn();
@@ -557,12 +565,12 @@ class Lobby {
     let currentPlayer = this.gameState.players.get(this.gameState.currentTurn);
     if(this.deadPlayers === this.gameState.players.size - 1){
       currentPlayer.myTurn = false;
-      if (this.currentTurnIndex + 1 === this.gameState.players.size) {
-        this.currentTurnIndex = 0;
+      if (this.gameState.currentTurnIndex + 1 === this.gameState.players.size) {
+        this.gameState.currentTurnIndex = 0;
       } else {
-        this.currentTurnIndex++;
+        this.gameState.currentTurnIndex++;
       }
-      this.gameState.currentTurn = this.turnOrder[this.currentTurnIndex];
+      this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
       this.gameState.players.get(this.gameState.currentTurn).myTurn = true;
 
       console.log("everyone is dead, winner is " + this.gameState.players.get(this.gameState.currentTurn).name);
@@ -583,13 +591,13 @@ class Lobby {
       }
 
       currentPlayer.myTurn = false;
-      if (this.currentTurnIndex + 1 === this.gameState.players.size) {
-        this.currentTurnIndex = 0;
+      if (this.gameState.currentTurnIndex + 1 === this.gameState.players.size) {
+        this.gameState.currentTurnIndex = 0;
       } else {
-        this.currentTurnIndex++;
+        this.gameState.currentTurnIndex++;
       }
 
-      this.gameState.currentTurn = this.turnOrder[this.currentTurnIndex];
+      this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
 
       // update new player turn
       this.gameState.players.get(this.gameState.currentTurn).myTurn = true;

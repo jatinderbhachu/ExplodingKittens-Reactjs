@@ -328,6 +328,14 @@ function GameHook() {
 
         {AnimatedCard}
 
+        {
+          insertingExploding &&
+          <CardStackOverlay
+            type="unselectable"
+            position={{top: drawPileLoc.y-5+"%", left: drawPileLoc.x+"%"}}
+            size={{width: "40%", height: "28%"}}
+            />
+        }
         <CardStack 
           cards={drawPile} 
           initialPos={drawPileLoc}

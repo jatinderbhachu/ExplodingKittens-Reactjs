@@ -318,11 +318,10 @@ server.on("connection", (socket) => {
 
         currentPlayer = lobby.gameState.players.get(lobby.gameState.currentTurn);
         lobby.addMoveHistoryItem(favorTarget.name + " gave " + currentPlayer.name + " a card");
-
+        currentPlayer.awaitingFavor = false;
         // update prev game state so that card is not removed from player and they are also not being targeted
         lobby.updatePrevGameState();
 
-        currentPlayer.awaitingFavor = false;
 
 
         //favorTarget.cards.splice(favorTarget.cards.indexOf(msg.data.card), 1);
