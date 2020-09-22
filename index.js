@@ -63,7 +63,7 @@ app.get("/lobby/:id", (req, res) => {
   res.sendFile(__dirname + "/frontend/build/index.html");
 });
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const server = new ws.Server({ server: app.listen(PORT) });
 console.log(`[INFO] Server running on http://localhost:${PORT}`);
 
