@@ -22,6 +22,7 @@
   margin: auto;
   width: 60%;
   height: 14%;
+  opacity: 0;
   top: -14%;
   left: 20%;
 }

@@ -5,10 +5,11 @@ function ModalNotification(props) {
   const notificationRef = useRef(null);
 
   const dropDownAnim = [
-    {top: '-14%'}, 
+    {top: '-14%', opacity: 1.0}, 
     {top: '0%', offset: 0.1}, 
     {top: '0%', offset: 0.9}, 
-    {top: '-14%'}, 
+    {opacity: 1.0, offset: 0.9}, 
+    {top: '-14%', opacity: 0.0}, 
   ];
 
   const animTiming = {

@@ -403,7 +403,7 @@ function GameHook() {
         }
 
         { gameState.favorTarget &&
-          <ModalNotification duration={5} msg={gameState.opponents.find(op => op.id === gameState.favorTarget).name + " is asking you for a favor!" }/>
+          <ModalNotification duration={5} msg={gameState.opponents.find(op => op.id === gameState.favorTarget).name + " is asking you for a favor! Give them a card of your choice." }/>
         }
 
         { gameState.turnsLeft > 1 &&
