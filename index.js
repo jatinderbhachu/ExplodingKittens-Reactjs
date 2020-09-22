@@ -43,6 +43,8 @@
  * */
 
 const ws = require("ws");
+const { default: sslRedirect } = require('heroku-ssl-redirect');
+
 const express = require("express");
 const { v4: uuid } = require("uuid");
 const Lobby = require("./Lobby");
@@ -52,7 +54,10 @@ function formatMsg(type, data) {
 }
 
 const app = express();
+
+app.use(sslRedirect());
 app.use(express.static("frontend/build"));
+
 app.get("/", (req, res) => {
   // res.sendFile(__dirname + "/client/index.html");
   res.sendFile(__dirname + "/frontend/build/index.html");
