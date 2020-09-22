@@ -24,7 +24,5 @@
       "node": true
     }
   },
-  "devDependencies": {
-    "eslint": "^7.4.0"
-  }
+  "devDependencies": {}
 }
