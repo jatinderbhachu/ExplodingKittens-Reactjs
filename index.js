@@ -43,7 +43,6 @@
  * */
 
 const ws = require("ws");
-const { default: sslRedirect } = require('heroku-ssl-redirect');
 
 const express = require("express");
 const { v4: uuid } = require("uuid");
@@ -55,10 +54,14 @@ function formatMsg(type, data) {
 
 const app = express();
 
-app.use(sslRedirect());
 app.use(express.static("frontend/build"));
 
 app.get("/", (req, res) => {
+  // res.sendFile(__dirname + "/client/index.html");
+  res.sendFile(__dirname + "/frontend/build/index.html");
+});
+
+app.get("/*", (req, res) => {
   // res.sendFile(__dirname + "/client/index.html");
   res.sendFile(__dirname + "/frontend/build/index.html");
 });
@@ -130,7 +133,7 @@ server.on("connection", (socket) => {
         } else {
           lobby = new Lobby();
           lobby.addPlayer(socket, msg.data.playerName, true);
-          lobby.name = `${msg.data.playerName}'s Lobby'`;
+          lobby.name = `${msg.data.playerName}'s Lobby`;
           lobbyCode = lobby.inviteCode;
           lobbies[lobby.inviteCode] = lobby;
           console.log(`[INFO] creating lobby ${lobbyCode}`);

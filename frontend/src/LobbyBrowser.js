@@ -39,15 +39,15 @@ function LobbyBrowser(props) {
   return (
     <>
     <header className="AppHeader"><h1>Exploding Kittens</h1></header>
-    <div className="LobbyBrowser LobbyItem">
-      <div className="Back">
-        <button onClick={() => history.goBack()}>Back</button>
-      </div>
-      <span>
+    <div className="LobbyBrowser">
+      <div className="LobbyHeader">
+        <button id="goBack" onClick={() => history.goBack()}>Back</button>
+        <span>
         Lobby browser
-        <button onClick={() => refreshList()}>Refresh list</button>
-      </span>
+        </span>
 
+        <button id="refresh" onClick={() => refreshList()}>Refresh list</button>
+      </div>
       <table>
         <thead>
           <tr>
