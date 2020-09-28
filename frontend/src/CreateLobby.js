@@ -70,6 +70,9 @@ function CreateLobby(props) {
 
   // When server acknowledges the kick, and tells this client to leave
   function kick() {
+    Socket.send("leave_lobby", {lobbyID: context.lobbyID});
+    context.lobbyID = undefined;
+    context.isHost = false;
     history.goBack();
   }
 

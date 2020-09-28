@@ -46,54 +46,58 @@
  * */
 
 const ws = require("ws");
-
 const express = require("express");
+const app = express();
+const https = require("https");
+const http = require("http");
+const url = require('url');
 const { v4: uuid } = require("uuid");
-const Lobby = require("./Lobby");
+const fs = require("fs");
 
-function formatMsg(type, data) {
-  return JSON.stringify({ type, data });
+const Lobby = require("./Lobby");
+const { formatMsg, getLobbyList, updateLobby } = require("./util");
+const PORT = process.env.PORT || 8443;
+
+require('dotenv').config();
+
+let server;
+
+
+// if in production, create https server
+if(process.env.NODE_ENV === "production") {
+  let options = {
+    cert: fs.readFileSync( __dirname + '/ssl/cert.pem'),
+    key: fs.readFileSync(__dirname + '/ssl/key.pem'),
+  };
+
+  server = https.createServer(options, app);
+  console.log(`[INFO] Server running on https://localhost:${PORT}`);
+
+} else { // otherwise create http server for debugging
+  server = http.createServer(app);
+  console.log(`[INFO] Server running on http://localhost:${PORT}`);
 }
 
-const app = express();
 
 app.use(express.static("frontend/build"));
 
 app.get("/", (req, res) => {
-  // res.sendFile(__dirname + "/client/index.html");
   res.sendFile(__dirname + "/frontend/build/index.html");
 });
 
 app.get("/*", (req, res) => {
-  // res.sendFile(__dirname + "/client/index.html");
   res.sendFile(__dirname + "/frontend/build/index.html");
 });
 
-app.get("/lobby/:id", (req, res) => {
-  // res.sendFile(__dirname + "/client/index.html");
-  res.sendFile(__dirname + "/frontend/build/index.html");
-});
+server.listen(PORT);
 
-const PORT = process.env.PORT || 8080;
-const server = new ws.Server({ server: app.listen(PORT) });
-console.log(`[INFO] Server running on http://localhost:${PORT}`);
+// WebSocket server
+const WSS = new ws.Server({ noServer: true});
+
 
 const lobbies = new Map();
 
-function getLobbyList(){
-  let formattedLobbies = [];
-  for (let lobby of lobbies.values()) {
-    formattedLobbies.push({
-      name: lobby.name,
-      lobbyID: lobby.inviteCode,
-      players: lobby.gameState.players.size,
-      state: lobby.state,
-    });
-  }
-  return formattedLobbies;
-}
-
-server.on("connection", (socket) => {
+WSS.on("connection", (socket) => {
   socket.id = uuid();
   console.log(`[INFO] ${socket.id} has connected`);
   socket.send(JSON.stringify({ type: "set_id", data: socket.id }));
@@ -116,14 +120,11 @@ server.on("connection", (socket) => {
       /* Client attempts to join a lobby */
       case "join_lobby":
         let lobbyCode;
+        // if an invite code is present, join lobby with said code, otherwise create a new lobby
         if (msg.data.inviteCode) {
-          // call join lobby
-          if (!lobbies.get(msg.data.inviteCode)) break;
+          lobby = lobbies.get(msg.data.inviteCode);
 
           let isHost = false;
-          if(lobbies.get(msg.data.inviteCode).gameState.players.size < 1){
-            isHost = true;
-          }
 
           lobbyCode = msg.data.inviteCode;
           lobbies.get(msg.data.inviteCode).addPlayer(
@@ -141,26 +142,11 @@ server.on("connection", (socket) => {
           console.log(`[INFO] creating lobby ${lobbyCode}`);
         }
 
-        console.log("[INFO] updating lobby");
-        for (let [id, player] of lobbies.get(lobbyCode).gameState.players.entries()) {
-          lobbyPlayers.push({
-            id: player.socket.id,
-            name: player.name,
-            isHost: player.isHost,
-            isReady: player.isReady
-          });
-        }
-
-        lobbies.get(lobbyCode).emit(
-          formatMsg("update_lobby", {
-            players: lobbyPlayers,
-            settings: { inviteCode: lobbyCode },
-          })
-        );
+        updateLobby(lobby);
 
         break;
       case "get_lobby_list":
-        socket.send(formatMsg("update_lobby_list", {lobbies: getLobbyList()}));
+        socket.send(formatMsg("update_lobby_list", {lobbies: getLobbyList(lobbies)}));
         break;
       case "post_game_cleanup":
         // delete the lobby 
@@ -175,33 +161,23 @@ server.on("connection", (socket) => {
           lobby.gameState.players.delete(msg.data.playerID);
         }
 
+        updateLobby(lobby);
 
-        console.log("[INFO] updating lobby");
-        lobbyPlayers = [];
-        for (let [id, player] of lobbies.get(msg.data.lobbyID).gameState.players.entries()) {
-          lobbyPlayers.push({
-            id: player.socket.id,
-            name: player.name,
-            isHost: player.isHost,
-            isReady: player.isReady
-          });
-        }
-
-        lobby.emit(
-          formatMsg("update_lobby", {
-            players: lobbyPlayers,
-            settings: { inviteCode: msg.data.lobbyID },
-          }
-        ));
         break;
       // when a client leaves the lobby
       case "leave_lobby":
         lobby = lobbies.get(msg.data.lobbyID);
         // delete the player
         lobby.gameState.players.delete(socket.id);
-        // if the lobby is empty, delete the lobby to preserve space
+        // if the lobby is empty, delete the lobby
         if(lobby.gameState.players.size < 1) {
           lobbies.delete(msg.data.lobbyID);
+        } else {
+          // set the last player in lobby to be the new host
+          if(lobby.gameState.players.size === 1){
+            lobby.gameState.players.values().next().value.isHost = true;
+          }
+          updateLobby(lobby);
         }
         break;
       /* Lobby host attempts to start the game */
@@ -397,23 +373,7 @@ server.on("connection", (socket) => {
       if(lobby.gameState.players.has(socket.id)){
         lobby.gameState.players.delete(socket.id);
 
-        console.log("[INFO] updating lobby");
-        let lobbyPlayers = [];
-        for (let [id, player] of lobby.gameState.players.entries()) {
-          lobbyPlayers.push({
-            id: player.socket.id,
-            name: player.name,
-            isHost: player.isHost,
-            isReady: player.isReady
-          });
-        }
-
-        lobby.emit(
-          formatMsg("update_lobby", {
-            players: lobbyPlayers,
-            settings: { inviteCode: lobbyID},
-          })
-        );
+        updateLobby(lobby);
 
         // if lobby is empty, delete it
         if(lobby.players.size === 0){
@@ -424,6 +384,17 @@ server.on("connection", (socket) => {
   };
 });
 
-function updateLobby(lobby) {
-  emitToLobby(lobby);
-}
+
+// handles websocket upgrade requests
+server.on('upgrade', (request, socket, head) => {
+  console.log("upgrade", request.url);
+  const pathname = url.parse(request.url).pathname;
+  if (pathname === '/ws') {
+    WSS.handleUpgrade(request, socket, head, function done(ws) {
+      WSS.emit('connection', ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
+

@@ -10,7 +10,9 @@ class CustomSocket {
 
   connect() {
     let wsProtocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
-    this.socket = new WebSocket(wsProtocol + window.location.hostname + ":8080");
+    let port = (window.location.port.length > 0) ? ":"+window.location.port : ""; 
+    let wsEndpoint = "/ws";
+    this.socket = new WebSocket(wsProtocol + window.location.hostname + port + wsEndpoint);
     this.socket.onopen = (e) => {
       console.log("socket is open");
       document.dispatchEvent(new CustomEvent("socket_state_change", {detail: WebSocket.OPEN}));
