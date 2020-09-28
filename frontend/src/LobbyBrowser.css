@@ -39,6 +39,7 @@
 .LobbyBrowser td {
   padding: 5px 0px 5px 0px;
   outline: 1px solid gray;
+  text-align: center;
 }
 
 .LobbyBrowser tr > td:first-child {
@@ -60,28 +61,29 @@
   width: 70%;
 }
 
-.LobbyBrowser span {
-  font-size: 36px;
+.LobbyBrowser .LobbyHeader {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  font-size: 1.8rem;
+  font-weight: bold;
 }
 
-
-.LobbyBrowser button {
+.LobbyBrowser #goBack {
   background-color: #f45555;
   border: 0px;
   padding: 1vw;
   color: antiquewhite;
   font-size: 0.6rem;
-  float: left;
 }
-.LobbyBrowser button:hover {
+.LobbyBrowser #goBack:hover {
   background-color: #e31a1a;
   cursor: pointer;
 }
 
-.LobbyBrowser span > button {
+.LobbyBrowser #refresh {
   font-size: 24px;
-  float: right;
-  margin: auto;
   font-size: 24px;
   padding: 8px;
   border: 1px solid transparent;

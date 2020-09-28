@@ -64,6 +64,11 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/frontend/build/index.html");
 });
 
+app.get("/*", (req, res) => {
+  // res.sendFile(__dirname + "/client/index.html");
+  res.sendFile(__dirname + "/frontend/build/index.html");
+});
+
 app.get("/lobby/:id", (req, res) => {
   // res.sendFile(__dirname + "/client/index.html");
   res.sendFile(__dirname + "/frontend/build/index.html");
@@ -130,7 +135,7 @@ server.on("connection", (socket) => {
         } else {
           lobby = new Lobby();
           lobby.addPlayer(socket, msg.data.playerName, true);
-          lobby.name = `${msg.data.playerName}'s Lobby'`;
+          lobby.name = `${msg.data.playerName}'s Lobby`;
           lobbyCode = lobby.inviteCode;
           lobbies.set(lobby.inviteCode, lobby);
           console.log(`[INFO] creating lobby ${lobbyCode}`);

@@ -9,6 +9,9 @@
 # testing
 /frontend/coverage
 
+# production
+/frontend/build
+
 # misc
 /frontend/.DS_Store
 /frontend/.env.local
