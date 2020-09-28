@@ -145,8 +145,6 @@ class Lobby {
    *      but you cannot see which card
    */
 
-  // TODO: exploding, defuse, attack, NOPE, cat
-  // move history, current move the player made
   playCards(socket, cards) {
     if(cards[0] !== "nope"){
       this.updatePrevGameState();

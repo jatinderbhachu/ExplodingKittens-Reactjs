@@ -1,4 +1,7 @@
 /*
+ * Author: Jatinder Bhachu
+ *
+ * TODO: REFACTOR CODE
  *
  * GAME SETUP
  *  - each player starts with 7 random cards and 1 defuse card
@@ -43,7 +46,6 @@
  * */
 
 const ws = require("ws");
-const { default: sslRedirect } = require('heroku-ssl-redirect');
 
 const express = require("express");
 const { v4: uuid } = require("uuid");
@@ -55,7 +57,6 @@ function formatMsg(type, data) {
 
 const app = express();
 
-app.use(sslRedirect());
 app.use(express.static("frontend/build"));
 
 app.get("/", (req, res) => {
@@ -72,12 +73,11 @@ const PORT = process.env.PORT || 8080;
 const server = new ws.Server({ server: app.listen(PORT) });
 console.log(`[INFO] Server running on http://localhost:${PORT}`);
 
-const lobbies = [];
+const lobbies = new Map();
 
 function getLobbyList(){
   let formattedLobbies = [];
-  for (let lobbyID in lobbies) {
-    let lobby = lobbies[lobbyID];
+  for (let lobby of lobbies.values()) {
     formattedLobbies.push({
       name: lobby.name,
       lobbyID: lobby.inviteCode,
@@ -102,7 +102,7 @@ server.on("connection", (socket) => {
     let lobbyPlayers = [];
     switch (msg.type) {
       case "get_game_state":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         //lobby.updateGameState(socket);
         let gameState = lobby.getGameState(socket);
         socket.send(formatMsg("update_game_state", gameState));
@@ -113,15 +113,15 @@ server.on("connection", (socket) => {
         let lobbyCode;
         if (msg.data.inviteCode) {
           // call join lobby
-          if (!lobbies[msg.data.inviteCode]) break;
+          if (!lobbies.get(msg.data.inviteCode)) break;
 
           let isHost = false;
-          if(lobbies[msg.data.inviteCode].gameState.players.size < 1){
+          if(lobbies.get(msg.data.inviteCode).gameState.players.size < 1){
             isHost = true;
           }
 
           lobbyCode = msg.data.inviteCode;
-          lobbies[msg.data.inviteCode].addPlayer(
+          lobbies.get(msg.data.inviteCode).addPlayer(
             socket,
             msg.data.playerName,
             isHost
@@ -132,14 +132,12 @@ server.on("connection", (socket) => {
           lobby.addPlayer(socket, msg.data.playerName, true);
           lobby.name = `${msg.data.playerName}'s Lobby'`;
           lobbyCode = lobby.inviteCode;
-          lobbies[lobby.inviteCode] = lobby;
+          lobbies.set(lobby.inviteCode, lobby);
           console.log(`[INFO] creating lobby ${lobbyCode}`);
         }
 
-        //updateLobby(lobbies[lobbyCode]);
-
         console.log("[INFO] updating lobby");
-        for (let [id, player] of lobbies[lobbyCode].gameState.players.entries()) {
+        for (let [id, player] of lobbies.get(lobbyCode).gameState.players.entries()) {
           lobbyPlayers.push({
             id: player.socket.id,
             name: player.name,
@@ -148,7 +146,7 @@ server.on("connection", (socket) => {
           });
         }
 
-        lobbies[lobbyCode].emit(
+        lobbies.get(lobbyCode).emit(
           formatMsg("update_lobby", {
             players: lobbyPlayers,
             settings: { inviteCode: lobbyCode },
@@ -161,14 +159,11 @@ server.on("connection", (socket) => {
         break;
       case "post_game_cleanup":
         // delete the lobby 
-        let lobbyIndex = lobbies.indexOf(lobbies[msg.data.lobbyID]);
-        if(lobbyIndex >= 0){
-          lobbies.splice(lobbyIndex, 1);
-        }
+        lobbies.delete(msg.data.lobbyID);
 
         break;
       case "kick_player":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         if(lobby.gameState.players.get(socket.id).isHost){
           let kickedPlayer = lobby.gameState.players.get(msg.data.playerID);
           kickedPlayer.socket.send(formatMsg("kick", {}));
@@ -178,7 +173,7 @@ server.on("connection", (socket) => {
 
         console.log("[INFO] updating lobby");
         lobbyPlayers = [];
-        for (let [id, player] of lobbies[msg.data.lobbyID].gameState.players.entries()) {
+        for (let [id, player] of lobbies.get(msg.data.lobbyID).gameState.players.entries()) {
           lobbyPlayers.push({
             id: player.socket.id,
             name: player.name,
@@ -196,45 +191,42 @@ server.on("connection", (socket) => {
         break;
       // when a client leaves the lobby
       case "leave_lobby":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         // delete the player
         lobby.gameState.players.delete(socket.id);
         // if the lobby is empty, delete the lobby to preserve space
-        // FIXME: this doesnt work, lobbies is key/pair object not array
         if(lobby.gameState.players.size < 1) {
-          lobbies.splice(lobbies.indexOf(lobby), 1);
+          lobbies.delete(msg.data.lobbyID);
         }
         break;
       /* Lobby host attempts to start the game */
       case "try_start_game":
         console.log("[INFO] try_start_game");
-        lobby = lobbies[msg.data.lobbyCode];
-        // loop through players and check if they are all ready
+        lobby = lobbies.get(msg.data.lobbyCode);
+        // FIXME: loop through players and check if they are all ready
         // set lobby settings
         // change game state to IN_PROGRESS
         // emit start game event
 
-        // players is a map, use .size for length
         if (lobby.gameState.players.size > 1) {
           lobby.setupGame();
         }
         break;
-      // FIXME: use lobby invite id to get the lobby instead of searching for it
       case "get_opponents":
-        lobbies[msg.data.lobbyID].updateOpponents(socket);
+        lobbies.get(msg.data.lobbyID).updateOpponents(socket);
         break;
       case "get_table":
-        lobbies[msg.data.lobbyID].updateTable(socket);
+        lobbies.get(msg.data.lobbyID).updateTable(socket);
         break;
       case "get_player":
-        lobbies[msg.data.lobbyID].updatePlayer(socket);
+        lobbies.get(msg.data.lobbyID).updatePlayer(socket);
         break;
       case "get_turn":
-        lobbies[msg.data.lobbyID].updateTurn();
+        lobbies.get(msg.data.lobbyID).updateTurn();
         break;
 
       case "play_cards":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         // only play turn if current player is allowed to
         if(lobby.gameState.currentTurn === socket.id || msg.data.cards[0] === "nope"){
           lobby.playCards(socket, msg.data.cards);
@@ -242,7 +234,7 @@ server.on("connection", (socket) => {
 
         break;
       case "end_turn":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         if(lobby.gameState.players.get(socket.id).drewExploding)
           break;
 
@@ -298,7 +290,7 @@ server.on("connection", (socket) => {
         }
         break;
       case "get_favor_from":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         //lobby.updatePrevGameState();
         const fromPlayer = lobby.gameState.players.get(msg.data.from);
         currentPlayer = lobby.gameState.players.get(lobby.gameState.currentTurn);
@@ -314,7 +306,7 @@ server.on("connection", (socket) => {
         break;
       case "give_favor_card":
         // use associative array of players to avoid looping through everyone
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         //lobby.updatePrevGameState();
 
         // remove the card from the person giving away card
@@ -347,7 +339,7 @@ server.on("connection", (socket) => {
         //}
         break;
       case "steal_card":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
 
         currentPlayer = lobby.gameState.players.get(lobby.gameState.currentTurn);
         lobby.addMoveHistoryItem(currentPlayer.name + " just yoinked a card from " + lobby.gameState.players.get(msg.data.from).name);
@@ -366,7 +358,7 @@ server.on("connection", (socket) => {
 
         break;
       case "set_exploding_pos":
-        lobby = lobbies[msg.data.lobbyID];
+        lobby = lobbies.get(msg.data.lobbyID);
         if(lobby.gameState.currentTurn === socket.id && lobby.exploding){
           let explodingPlayer = lobby.gameState.players.get(socket.id);
           console.log("inserting exploding kitten at index " + msg.data.index);
@@ -396,8 +388,7 @@ server.on("connection", (socket) => {
 
     // TODO: add a lobby id property to each socket connection
     // makes it easier to identify the lobby they are in
-    for (let lobbyID in lobbies) {
-      let lobby = lobbies[lobbyID];
+    for (let lobby of lobbies.values()) {
       if(lobby.gameState.players.has(socket.id)){
         lobby.gameState.players.delete(socket.id);
 
@@ -419,7 +410,10 @@ server.on("connection", (socket) => {
           })
         );
 
-        // delete lobby if empty
+        // if lobby is empty, delete it
+        if(lobby.players.size === 0){
+          lobbies.delete(lobby.inviteCode);
+        }
       }
     }
   };
