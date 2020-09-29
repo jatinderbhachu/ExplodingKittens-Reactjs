@@ -1,39 +1,21 @@
 const { v4: uuid } = require("uuid");
-
-function formatMsg(type, data) {
-  return JSON.stringify({ type, data });
-}
-
-// variable to track current turn
-// variable to track next turn
-// attribute in each player to determine if its their turn
-// during a players turn, they can player any action cards
-// their turn only ends when they draw a card from the draw pile
-// if a exploding kitten is draw, they must use a defuse. If they do not have a defuse,
-// they lose
+const { formatMsg } = require("./util");
 
 class Lobby {
-  // lobby will have a invite code, name, max players, card set setting for the game
   constructor() {
     //this.name = "";
     //this.maxPlayers = 8;
     //this.cardSet = "";
-    // create states:
+
     // IN_LOBBY
-    // IN_GAME
-    // WINNER_DECLARED
-    // EMPTY
+    // IN_PROGRESS
     this.state = "IN_LOBBY";
-    //this.gameState.players = new Map();
-    this.turnOrder = [];
-    this.inviteCode = uuid().replace(/-/g, "");
 
-    //this.gameState.drawPile = [];
+    this.lobbyID = uuid().replace(/-/g, "");
+
     this.exploding = false;
-    //this.gameState.discardPile = [];
 
-    // the id of the player whose turn it is
-    // the index of turnOrder
+    this.turnOrder = [];
     this.deadPlayers = 0;
 
     this.cardTypes = {
@@ -52,8 +34,10 @@ class Lobby {
       cat5: 4,
     };
 
+    // date time used for move history
     this.gameStartTime = undefined;
 
+    // text based history of moves
     this.moveHistory = [];
 
     this.gameState = {
@@ -64,6 +48,8 @@ class Lobby {
       winner: undefined,
       currentTurnIndex: undefined,
     };
+
+    // store prev game state for nope cards
     this.prevGameState = {};
     this.updatePrevGameState();
 
@@ -99,10 +85,6 @@ class Lobby {
       isStealing: false,
       myTurn: false,
       awaitingFavor: false,
-      /*
-        Number of times the player has to draw a card to end their turn, 
-        if it is > 1, the player is victim of attack card and must draw multiple times
-       */
       turnsLeft: 1,
       cards: [],
       askingFavor: false,
@@ -163,7 +145,6 @@ class Lobby {
           currentPlayer.insertingExploding = false;
           this.addMoveHistoryItem(currentPlayer.name + " managed to defuse the exploding kitten in time");
           this.nextTurn();
-          this.updateTurn();
 
         } else {
           currentPlayer.insertingExploding = true;
@@ -184,7 +165,6 @@ class Lobby {
         this.removePlayerCards(socket.id, ["exploding"])
         this.gameState.drawPile.splice(Math.random() * this.gameState.drawPile.length, 0,"exploding");
         this.nextTurn();
-        this.updateTurn();
 
         this.updateGameState();
 
@@ -192,19 +172,11 @@ class Lobby {
       }
     }
 
+    // player played multiple cat cards
     if (cards.length > 1) {
-      // FIXME: check if all cards are of type cat
-      //socket.send(formatMsg('use_steal', {}));
-
       this.gameState.players.get(socket.id).isStealing = true;
     } else {
       if(cards[0] === "nope") { // NOPE
-        //console.log("used nope, current game state", this.gameState);
-        //console.log("prev game state: ",  this.prevGameState);
-        //this.gameState = this.prevGameState;
-
-        // for when the another player uses a nope card to cancel out this nope
-        // this.updatePrevGameState();
 
         // dont do anything if a exploding kitten was drawn or defuse was used
         let lastCard = this.gameState.discardPile[this.gameState.discardPile.length-1];
@@ -213,7 +185,6 @@ class Lobby {
           return;
         }
 
-        // do not restore the game state if the previous card played was a defuse
         this.restorePrevGameState();
 
         this.addMoveHistoryItem(this.gameState.players.get(socket.id).name + " noped " + lastCard);
@@ -249,13 +220,14 @@ class Lobby {
         this.addMoveHistoryItem(currentPlayer.name + " ended their turn by using a skip");
         // skip this.gameState.players turn, not forced to draw a card to end turn
         this.nextTurn();
-        this.updateTurn();
       } else if (cards[0] === "favor") { // FAVOR
         this.gameState.players.get(socket.id).askingFavor = true;
       } else if(cards[0] === "attack") { // ATTACK
         let currentPlayer = this.gameState.players.get(this.gameState.currentTurn);
         let currTurnsLeft = currentPlayer.turnsLeft;
         currentPlayer.turnsLeft = 1;
+
+        this.updatePrevGameState();
 
         this.addMoveHistoryItem(currentPlayer.name + " ended their turn by using an ATTACK");
 
@@ -271,7 +243,6 @@ class Lobby {
 
         this.addMoveHistoryItem(nextPlayer.name + " must now draw a card " + nextPlayer.turnsLeft + "x");
 
-        this.updateTurn();
         this.updateGameState();
       }
     }
@@ -301,6 +272,7 @@ class Lobby {
       }
     }
 
+    // do not restore the players previous cards on certain conditions
     for(let player of this.gameState.players.values()){
       if(player.askingFavor || player.favorTarget){
         restorePrevCards = false;
@@ -319,6 +291,9 @@ class Lobby {
     if(lastCard === "future"){
       restorePrevCards = false;
     } else if(lastCard === "attack"){
+  /**
+   * returns a deep copy of the previous game state
+  */
       restorePrevCards = false;
     }
 
@@ -351,6 +326,9 @@ class Lobby {
 
   }
 
+  /**
+   * creates a deep copy of the current game state, sets prev state
+  */
   updatePrevGameState() {
     this.prevGameState.players = new Map();
     for(let player of this.gameState.players.values()){
@@ -365,7 +343,7 @@ class Lobby {
   }
 
   /**
-   * returns a deep copy of the previous game state
+   * Creates a deep copy of prevGameState
   */
   getPrevGameState() {
     let state = {};
@@ -384,15 +362,14 @@ class Lobby {
 
   setupGame() {
     this.state = "IN_PROGRESS";
+
+    // distribute cards to each player from draw pile
     for (let [id, player] of this.gameState.players.entries()) {
       // give player 7 random cards from the draw pile
       for (let i = 0; i < 7; i++) {
         let randCard = Math.floor(Math.random() * this.gameState.drawPile.length);
         player.cards.push(this.gameState.drawPile.splice(randCard, 1)[0]);
       }
-
-      //player.cards.push("favor");
-      //player.cards.push("nope");
 
       // give each player a defuse card
       player.cards.push("defuse");
@@ -417,9 +394,6 @@ class Lobby {
     }
 
 
-    // tell every client to start the game
-    // determine the player who will play first turn
-
     for(let key of this.gameState.players.keys()){
       this.turnOrder.push(key);
     }
@@ -430,24 +404,20 @@ class Lobby {
     this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
 
     this.gameState.players.get(this.gameState.currentTurn).myTurn = true;
-    //this.updateTurn();
 
     console.log("Setup Draw Pile: ", this.gameState.drawPile);
-    this.emit(
-      formatMsg("start_game", {
-        currentTurn: this.gameState.currentTurn,
-      })
-    );
+    this.emit("start_game", { currentTurn: this.gameState.currentTurn });
 
     this.gameStartTime = new Date().getTime();
 
   }
 
-  // gets the current gamestate to the specified socket
-  getGameState(socket) {
+  // gets the current gamestate based on the specified socketID
+  getGameState(socketID) {
+    // create a list of opponents for the specific socket, only including # of cards
     let opponents = [];
     for(let player of this.gameState.players.values()){
-      if(player.socket.id !== socket.id){
+      if(player.socket.id !== socketID){
           opponents.push({ 
             name: player.name,
             id: player.socket.id,
@@ -457,64 +427,38 @@ class Lobby {
           });
       }
     }
-    let player = this.gameState.players.get(socket.id);
+    let player = this.gameState.players.get(socketID);
 
     return {
       opponents,
       drawPile: this.gameState.drawPile.length,
       discardPile: this.gameState.discardPile,
+      currentTurn: this.gameState.currentTurn,
+      winner: this.gameState.winner,
       playerCards: player.cards,
       drewExploding: player.drewExploding,
       insertingExploding: player.insertingExploding,
-      currentTurn: this.gameState.currentTurn,
       turnsLeft: player.turnsLeft,
       askingFavor: player.askingFavor,
-      stealingCard: player.stealingCard,
-      insertingExploding: player.insertingExploding,
+      isStealing: player.isStealing,
       favorTarget: player.favorTarget,
       futureCards: player.futureCards,
+      isDead: player.isDead,
       pCardChangedIndices: player.pCardChangedIndices,
-      winner: this.gameState.winner,
     };
   }
 
 
   updateGameState() {
     for(let player of this.gameState.players.values()){
-      let opponents = [];
-      for(let opponent of this.gameState.players.values()){
-        if(opponent.socket.id !== player.socket.id){
-          opponents.push({ 
-            name: opponent.name,
-            id: opponent.socket.id,
-            cards: opponent.cards.length,
-            isDead: opponent.isDead,
-            drewExploding: opponent.drewExploding
-          });
-        }
-      }
+      let state = this.getGameState(player.socket.id);
+      player.socket.send(formatMsg("update_game_state", state));
 
-      player.socket.send(formatMsg("update_game_state", {
-        opponents: opponents,
-        drawPile: this.gameState.drawPile.length,
-        discardPile: this.gameState.discardPile,
-        playerCards: player.cards,
-        drewExploding: player.drewExploding,
-        insertingExploding: player.insertingExploding,
-        currentTurn: this.gameState.currentTurn,
-        turnsLeft: player.turnsLeft,
-        isStealing: player.isStealing,
-        askingFavor: player.askingFavor,
-        favorTarget: player.favorTarget,
-        futureCards: player.futureCards,
-        isDead: player.isDead,
-        pCardChangedIndices: player.pCardChangedIndices,
-        winner: this.gameState.winner,
-      }));
+      // reset changed indices for animated cards
       player.pCardChangedIndices = [];
-      player.futureCards = [];
 
-      //player.socket.send(formatMsg("update_move_history", {moveHistory: this.moveHistory}))
+      // stop player from seeing future cards
+      player.futureCards = [];
 
     }
     this.updateMoveHistory();
@@ -529,6 +473,11 @@ class Lobby {
     player.cards.splice(index, 0, card);
   }
 
+  /**
+   * Removes an array of cards
+   * eg. ["defuse", "attack"] or array of indices [0, 5, 2]
+   *
+   */
   removePlayerCards(socketID, cards){
     let removedCards = [];
     const player = this.gameState.players.get(socketID);
@@ -610,9 +559,6 @@ class Lobby {
 
   drawCard() {
     let drawnCard = this.gameState.drawPile.pop();
-    //if(drawnCard !== "exploding"){
-      //this.gameState.players.get(this.gameState.currentTurn).cards.push(drawnCard);
-    //}
     this.addPlayerCard(this.gameState.currentTurn, drawnCard);
 
     return drawnCard;
@@ -626,23 +572,15 @@ class Lobby {
   }
 
   updateMoveHistory(){
-    this.emit(formatMsg("update_move_history", {moveHistory: this.moveHistory}));
-  }
-
-  updateTurn() {
-    this.emit(
-      formatMsg("update_turn", {
-        currentTurn: this.gameState.currentTurn,
-      })
-    );
+    this.emit("update_move_history", {moveHistory: this.moveHistory});
   }
 
   /**
    * sends a message to every client in the lobby
    */
-  emit(msg) {
+  emit(type, msg) {
     for (let [id, player] of this.gameState.players.entries()) {
-      player.socket.send(msg);
+      player.socket.send(formatMsg(type, msg));
     }
   }
 
@@ -658,23 +596,11 @@ class Lobby {
       });
     }
 
-    this.emit(
-      formatMsg("update_lobby", {
-        players: lobbyPlayers,
-        settings: { inviteCode: this.inviteCode},
-      })
-    );
+    this.emit("update_lobby", {
+      players: lobbyPlayers,
+      settings: { lobbyID: this.lobbyID},
+    });
   }
-
-  static getPlayerLobby(lobbies, socket) {
-    for (const lobby of lobbies) {
-      for (const player of lobby.players) {
-        if (player.socket.id === socket.id) return lobby;
-      }
-    }
-    return undefined;
-  }
-
 
 } // Lobby class
 

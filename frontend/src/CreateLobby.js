@@ -24,7 +24,7 @@ function CreateLobby(props) {
 
   function updateLobby(e) {
     let data = e.detail;
-    context.lobbyID = data.settings.inviteCode;
+    context.lobbyID = data.settings.lobbyID;
 
     for(let player of data.players){
       if(player.id === context.ID){
@@ -54,7 +54,7 @@ function CreateLobby(props) {
     Socket.send(
       "try_start_game", {
         settings: { name: settings["lobbyName"].value },
-        lobbyCode: context.lobbyID,
+        lobbyID: context.lobbyID,
       }
     );
   }
@@ -95,7 +95,7 @@ function CreateLobby(props) {
       Socket.send(
         "join_lobby", { 
           playerName: context.playerName, 
-          inviteCode: id
+          lobbyID: id
         }
       );
     }
@@ -121,7 +121,11 @@ function CreateLobby(props) {
   function handleGoBack() {
     Socket.send("leave_lobby", {lobbyID: context.lobbyID});
     context.lobbyID = undefined;
-    history.goBack();
+    if(history.length <= 2){
+      history.replace("/");
+    } else {
+      history.goBack();
+    }
 
   }
 
