@@ -193,19 +193,6 @@ WSS.on("connection", (socket) => {
           lobby.setupGame();
         }
         break;
-      case "get_opponents":
-        lobbies.get(msg.data.lobbyID).updateOpponents(socket);
-        break;
-      case "get_table":
-        lobbies.get(msg.data.lobbyID).updateTable(socket);
-        break;
-      case "get_player":
-        lobbies.get(msg.data.lobbyID).updatePlayer(socket);
-        break;
-      case "get_turn":
-        lobbies.get(msg.data.lobbyID).updateTurn();
-        break;
-
       case "play_cards":
         lobby = lobbies.get(msg.data.lobbyID);
         // only play turn if current player is allowed to
