@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {useHistory} from "react-router";
 import Socket from "./Socket";
 
-import "./LobbyBrowser.css";
+import "./styles/LobbyBrowser.css";
 
 function LobbyBrowser(props) {
   const [lobbies, setLobbies] = useState([]);

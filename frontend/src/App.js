@@ -8,7 +8,7 @@ import Game from "./Game";
 import AppContext from "./AppContext";
 import Socket from "./Socket";
 
-import "./App.css";
+import "./styles/App.css";
 
 
 

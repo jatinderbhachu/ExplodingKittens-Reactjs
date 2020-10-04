@@ -125,15 +125,14 @@
   cursor: pointer;
 }
 
-.CreateLobby-Container h1 button {
+.CreateLobby-Container button {
   background-color: #181818;
   border: 0px;
   padding: 1vw;
   color: antiquewhite;
   font-size: 0.6rem;
-  float: left;
 }
-.CreateLobby-Container h1 button:hover {
+.CreateLobby-Container button:hover {
   background-color: #181818;
   cursor: pointer;
 }

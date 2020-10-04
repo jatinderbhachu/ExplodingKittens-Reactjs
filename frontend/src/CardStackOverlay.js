@@ -1,6 +1,6 @@
 import React from "react";
 
-import "./CardStackOverlay.css";
+import "./styles/CardStackOverlay.css";
 
 function CardStackOverlay(props) {
   const { clickHandler, position, size, type } = props;

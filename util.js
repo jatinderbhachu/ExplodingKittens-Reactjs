@@ -7,7 +7,7 @@ function getLobbyList(lobbies) {
   for (let lobby of lobbies.values()) {
     formattedLobbies.push({
       name: lobby.name,
-      lobbyID: lobby.inviteCode,
+      lobbyID: lobby.lobbyID,
       players: lobby.gameState.players.size,
       state: lobby.state,
     });

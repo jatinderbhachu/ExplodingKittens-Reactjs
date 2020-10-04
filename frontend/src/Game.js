@@ -8,7 +8,7 @@ import CardStack from "./CardStack";
 import ModalNotification from "./ModalNotification";
 
 
-import "./Game.css";
+import "./styles/Game.css";
 import CardStackOverlay from "./CardStackOverlay";
 
 function GameHook() {
@@ -81,6 +81,11 @@ function GameHook() {
   const moveHistoryLoc = {x: 73, y: 32};
 
 
+  /**
+   * Determine the card piles that have changed, if a pile has a card is added or removed,
+   * the position of the piles are used to create an animated card to show what cards
+   * move where.
+  */
   function updateCardAnims(data, initialPositions, targetPositions, cardNames){
 
     const {drawPile, discardPile, opponents, playerCards, pCardChangedIndices} = data;
@@ -88,10 +93,11 @@ function GameHook() {
     // Check opponent card diffs
     let opponentWidth = (60/(data.opponents.length));
     let opponentSpacing = (100-opponentWidth)/data.opponents.length;
-    for(let i = 0; i < opponents.length; i++){
 
-      if(!Object.is(opponents[i].cards, gameState.opponents[i].cards)){
-        let diff = opponents[i].cards - gameState.opponents[i].cards;
+    let diff;
+
+    for(let i = 0; i < opponents.length; i++){
+        diff = opponents[i].cards - gameState.opponents[i].cards;
         if(diff > 0){
           for(let j = 0; j < diff; j++){
             targetPositions.push({top: 5, left: (opponentWidth/2) + opponentSpacing*i});
@@ -103,51 +109,44 @@ function GameHook() {
             cardNames.push("nonameCard");
           }
         }
-      }
     }
 
 
 
     // Check discard pile diff
-    if(!Object.is(discardPile, gameState.discardPile)){
-      let diff = discardPile.length - gameState.discardPile.length;
-      if(diff > 0){
-        for(let i = 0; i < diff; i++){
-          targetPositions.push({top: discardPileLoc.y, left: discardPileLoc.x });
-          cardNames.push(data.discardPile[data.discardPile.length-1]);
-        }
-      } else if(diff < 0) {
-        for(let i = 0; i > diff; i--){
-          initialPositions.push({top: discardPileLoc.y, left: discardPileLoc.x });
-        }
+    diff = discardPile.length - gameState.discardPile.length;
+    if(diff > 0){
+      for(let i = 0; i < diff; i++){
+        targetPositions.push({top: discardPileLoc.y, left: discardPileLoc.x });
+        cardNames.push(data.discardPile[data.discardPile.length-1]);
+      }
+    } else if(diff < 0) {
+      for(let i = 0; i > diff; i--){
+        initialPositions.push({top: discardPileLoc.y, left: discardPileLoc.x });
       }
     }
 
     // Check draw pile diff
-    if(!Object.is(drawPile, gameState.drawPile)){
-      let diff = drawPile - gameState.drawPile;
-      if(diff > 0){
-        for(let i = 0; i < diff; i++){
-          targetPositions.push({top: drawPileLoc.y, left: drawPileLoc.x + (-1/gameState.drawPile)});
-        }
-      } else if(diff < 0) {
-        for(let i = 0; i > diff; i--){
-          initialPositions.push({top: drawPileLoc.y, left: drawPileLoc.x + (-1/gameState.drawPile)});
-        }
+    diff = drawPile - gameState.drawPile;
+    if(diff > 0){
+      for(let i = 0; i < diff; i++){
+        targetPositions.push({top: drawPileLoc.y, left: drawPileLoc.x + (-1/gameState.drawPile)});
+      }
+    } else if(diff < 0) {
+      for(let i = 0; i > diff; i--){
+        initialPositions.push({top: drawPileLoc.y, left: drawPileLoc.x + (-1/gameState.drawPile)});
       }
     }
 
     // use player card changed indices
-    if(!Object.is(playerCards, gameState.playerCards)){
-      let diff = playerCards.length - gameState.playerCards.length;
-      for(let index of pCardChangedIndices) {
-        if(diff > 0){
-          targetPositions.push({top: playerPileLoc.y, left: playerPileLoc.x +(71/playerCards.length)*index});
-        } else if(diff < 0) {
-          initialPositions.push({top: playerPileLoc.y, left: playerPileLoc.x +(71/playerCards.length)*index});
-        }
-        cardNames.push(data.playerCards[index]);
+    diff = playerCards.length - gameState.playerCards.length;
+    for(let index of pCardChangedIndices) {
+      if(diff > 0){
+        targetPositions.push({top: playerPileLoc.y, left: playerPileLoc.x +(71/playerCards.length)*index});
+      } else if(diff < 0) {
+        initialPositions.push({top: playerPileLoc.y, left: playerPileLoc.x +(71/playerCards.length)*index});
       }
+      cardNames.push(data.playerCards[index]);
     }
   }
 
@@ -243,7 +242,7 @@ function GameHook() {
 
     // TODO: check if selected cards are valid, can only play multiple cards if they are of the same type, otherwise can only play 1 action card at once
 
-    if(cards[0] === "nope" || currentTurn === ID) {
+    if(currentTurn === ID || cards[0] === "nope" ) {
       Socket.send('play_cards', {
         lobbyID: lobbyID,
         cards: cards
@@ -267,7 +266,7 @@ function GameHook() {
     }
   }
 
-  let AnimatedCard = [];
+  let AnimatedCards = [];
 
   for(let i = 0; i < gameState.animCardsInitial.length; i++){
     const keyframes = [
@@ -284,8 +283,8 @@ function GameHook() {
       direction: 'normal',
       fill: 'forwards'
     };
-    // FIXME: when one card animation finishes, the rest of the cards will dissapear, remove each card individually
-    AnimatedCard.push(
+    // FIXME: when one card animation finishes, the rest of the cards will disappear. Remove each card individually
+    AnimatedCards.push(
       <Animation key={i} keyframes={keyframes} timing={timing} onFinish={() => {setGameState({animCardsInitial: [], animCardsTarget: [], animCardsName: []});}}>
         <div className={`AnimatedCard ${gameState.animCardsName[i]}`}></div>
       </Animation>);
@@ -326,7 +325,7 @@ function GameHook() {
         />
 
 
-        {AnimatedCard}
+        {AnimatedCards}
 
         {
           insertingExploding &&

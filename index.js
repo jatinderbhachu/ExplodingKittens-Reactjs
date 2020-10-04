@@ -251,7 +251,6 @@ WSS.on("connection", (socket) => {
 
         break;
       case "steal_card":
-
         currentPlayer = lobby.gameState.players.get(lobby.gameState.currentTurn);
         lobby.addMoveHistoryItem(currentPlayer.name + " just yoinked a card from " + lobby.gameState.players.get(msg.data.from).name);
 

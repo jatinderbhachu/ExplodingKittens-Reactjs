@@ -156,7 +156,7 @@ class Lobby {
           return;
       } else if (cards[0] !== "favor" || cards[0].includes("cat")){
         this.gameState.players.get(this.gameState.currentTurn).isDead = true;
-        this.gameState.players.get(this.gameState.currentTurn).drewExploding = true;
+        this.gameState.players.get(this.gameState.currentTurn).drewExploding = false;
         this.gameState.players.get(this.gameState.currentTurn).insertingExploding = false;
         this.deadPlayers++;
 
@@ -261,7 +261,7 @@ class Lobby {
 
 
   restorePrevGameState(){
-    const prevStateCopy = this.getPrevGameState();
+    const prevStateCopy = this.getStateCopy(this.gameState);
 
     let restorePrevCards = true;
     let lastCard;
@@ -269,8 +269,14 @@ class Lobby {
     for(let i = discardPile.length-1; i >= 0; i--){
       if(discardPile[i] !== "nope"){
         lastCard = discardPile[i];
+        break;
       }
     }
+
+    // if the previous card matches any one of these, do not 
+    // restore the player's cards from the previous state
+    const restoreCheckList = ["future", "attack", "skip", "favor"];
+
 
     // do not restore the players previous cards on certain conditions
     for(let player of this.gameState.players.values()){
@@ -288,12 +294,8 @@ class Lobby {
       }
     }
 
-    if(lastCard === "future"){
-      restorePrevCards = false;
-    } else if(lastCard === "attack"){
-  /**
-   * returns a deep copy of the previous game state
-  */
+    // if the last card matches a card in the checklist, dont restore prev cards
+    if(restoreCheckList.indexOf(lastCard) !== -1) {
       restorePrevCards = false;
     }
 
@@ -330,33 +332,24 @@ class Lobby {
    * creates a deep copy of the current game state, sets prev state
   */
   updatePrevGameState() {
-    this.prevGameState.players = new Map();
-    for(let player of this.gameState.players.values()){
-      let newPlayer = {...player};
-      newPlayer.cards = [...player.cards];
-      this.prevGameState.players.set(player.socket.id, newPlayer);
-    }
-    this.prevGameState.drawPile = this.gameState.drawPile;
-    this.prevGameState.discardPile = this.gameState.discardPile;
-    this.prevGameState.currentTurn = this.gameState.currentTurn;
-    this.prevGameState.currentTurnIndex = this.gameState.currentTurnIndex;
+    this.prevGameState = this.getStateCopy(this.gameState);
   }
 
   /**
    * Creates a deep copy of prevGameState
   */
-  getPrevGameState() {
+  getStateCopy(stateRef) {
     let state = {};
     state.players = new Map();
-    for(let player of this.prevGameState.players.values()){
+    for(let player of stateRef.players.values()){
       let newPlayer = {...player};
       newPlayer.cards = [...player.cards];
       state.players.set(player.socket.id, newPlayer);
     }
-    state.drawPile = this.prevGameState.drawPile;
-    state.discardPile = this.prevGameState.discardPile;
-    state.currentTurn = this.prevGameState.currentTurn;
-    state.currentTurnIndex = this.prevGameState.currentTurnIndex;
+    state.drawPile = stateRef.drawPile;
+    state.discardPile = stateRef.discardPile;
+    state.currentTurn = stateRef.currentTurn;
+    state.currentTurnIndex = stateRef.currentTurnIndex;
     return state;
   }
 
@@ -519,6 +512,12 @@ class Lobby {
       }
       this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
       this.gameState.players.get(this.gameState.currentTurn).myTurn = true;
+
+      // check if this player is dead, otherwise keep going until we reach
+      // the last alive player
+      if(this.gameState.players.get(this.gameState.currentTurn).isDead){
+        this.nextTurn();
+      }
 
       console.log("everyone is dead, winner is " + this.gameState.players.get(this.gameState.currentTurn).name);
       this.gameState.winner = this.gameState.currentTurn;

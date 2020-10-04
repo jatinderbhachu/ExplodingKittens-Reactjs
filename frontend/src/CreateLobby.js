@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useRef} from "react";
 import { useHistory, useParams } from "react-router";
 import AppContext from "./AppContext";
-import "./Lobby.css";
+import "./styles/Lobby.css";
 import Socket from "./Socket";
 
 function Player(props) {
@@ -137,8 +137,8 @@ function CreateLobby(props) {
     <>
     <header className="AppHeader"><h1>Exploding Kittens</h1></header>
     <div className="CreateLobby-Container">
+      <button onClick={() => handleGoBack()}>{"< Back"}</button>
       <h1>
-        <button onClick={() => handleGoBack()}>{"< Back"}</button>
         Create Custom Lobby
       </h1>
       <div className="CreateLobby">
