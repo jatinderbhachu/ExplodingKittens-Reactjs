@@ -18,7 +18,8 @@ const fs = require("fs");
 
 const Lobby = require("./Lobby");
 const { formatMsg, getLobbyList } = require("./util");
-const PORT = process.env.PORT || 8443;
+
+const PORT = process.env.PORT || 8080;
 
 
 let server;
