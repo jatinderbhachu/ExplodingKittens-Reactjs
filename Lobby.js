@@ -101,11 +101,11 @@ class Lobby {
    *  - can play as many cards as you want, as long as you end the turn by drawing a card
    *  - if you draw a exploding kitten, use defuse or you explode
    * CARDS
-   *  - exploding: 4
+   *  - exploding: 4 // DONE
    *      kills player when drawn, unless a defuse is used
-   *  - defuse: 6
+   *  - defuse: 6 // DONE
    *      used to defuse a exploding kitten
-   *  - attack: 4
+   *  - attack: 4 // DONE
    *      playing this card allows you to skip drawing a card
    *      forces next player to take 2 turns in a row
    *      this stacks, an attacked player can play an attack card to
@@ -505,11 +505,10 @@ class Lobby {
     let currentPlayer = this.gameState.players.get(this.gameState.currentTurn);
     if(this.deadPlayers === this.gameState.players.size - 1){
       currentPlayer.myTurn = false;
-      if (this.gameState.currentTurnIndex + 1 === this.gameState.players.size) {
-        this.gameState.currentTurnIndex = 0;
-      } else {
-        this.gameState.currentTurnIndex++;
-      }
+
+      this.gameState.currentTurnIndex++;
+      this.gameState.currentTurnIndex %= this.gameState.players.size;
+
       this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
       this.gameState.players.get(this.gameState.currentTurn).myTurn = true;
 
@@ -537,11 +536,8 @@ class Lobby {
       }
 
       currentPlayer.myTurn = false;
-      if (this.gameState.currentTurnIndex + 1 === this.gameState.players.size) {
-        this.gameState.currentTurnIndex = 0;
-      } else {
-        this.gameState.currentTurnIndex++;
-      }
+      this.gameState.currentTurnIndex++;
+      this.gameState.currentTurnIndex %= this.gameState.players.size;
 
       this.gameState.currentTurn = this.turnOrder[this.gameState.currentTurnIndex];
 

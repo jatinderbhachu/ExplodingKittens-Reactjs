@@ -48,15 +48,6 @@ function Opponents(props) {
         setSelectPosition={(index) => selectStealCard(opponent.id, index)}
       />
 
-      {favorTarget === opponent.id && (
-        <CardStackOverlay
-          type="selectable"
-          position={{ top: "0%", left: opponentSpacing * index + "%" }}
-          size={{ width: opponentWidth + "%", height: "28%" }}
-          clickHandler={() => selectFavorCard()}
-        />
-      )}
-
       {askingFavor && (
         <CardStackOverlay
           type="selectable"
@@ -77,6 +68,15 @@ function Opponents(props) {
             height: "28%",
           }}
         ></div>
+      )}
+
+      {favorTarget === opponent.id && (
+        <CardStackOverlay
+          type="selectable"
+          position={{ top: "0%", left: opponentSpacing * index + "%" }}
+          size={{ width: opponentWidth + "%", height: "28%" }}
+          clickHandler={() => selectFavorCard()}
+        />
       )}
     </React.Fragment>
   ));
